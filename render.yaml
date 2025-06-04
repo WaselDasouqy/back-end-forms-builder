@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: formwave-backend
+    env: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: CLIENT_URL
+        sync: false
+    autoDeploy: true
+    branch: main
+    buildFilter:
+      paths:
+        - server/**
+      ignoredPaths:
+        - README.md 

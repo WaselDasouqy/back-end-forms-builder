@@ -1,0 +1,63 @@
+name: Deploy Backend to Render
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'server/**'
+      - '.github/workflows/deploy.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'server/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: server/package-lock.json
+        
+    - name: Install dependencies
+      run: |
+        cd server
+        npm ci
+        
+    - name: Run type check
+      run: |
+        cd server
+        npm run typecheck
+        
+    - name: Run linting
+      run: |
+        cd server
+        npm run lint
+        
+    - name: Run tests
+      run: |
+        cd server
+        npm test
+        
+    - name: Build application
+      run: |
+        cd server
+        npm run build
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - name: Deploy to Render
+      run: |
+        echo "Deployment will be triggered automatically by Render when code is pushed to main branch"
+        echo "Make sure your Render service is connected to this GitHub repository" 
