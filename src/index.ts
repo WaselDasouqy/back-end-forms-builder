@@ -11,10 +11,10 @@ dotenv.config();
 
 // Create Express app
 const app = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 8000;
 const nodeEnv = process.env.NODE_ENV || 'development';
 
-// Trust proxy for Render
+// Trust proxy for cloud platforms (Koyeb, Render, etc.)
 app.set('trust proxy', 1);
 
 // Rate limiting
@@ -55,14 +55,27 @@ const corsOptions = {
       process.env.CLIENT_URL || 'http://localhost:3000',
       'http://localhost:3000',
       'http://localhost:3001',
-      // Add your production frontend URL here
+      // Common Vercel patterns
+      /^https:\/\/.*\.vercel\.app$/,
+      // Common Netlify patterns
+      /^https:\/\/.*\.netlify\.app$/,
+      // Custom domains
+      /^https:\/\/formwave\./,
     ];
     
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
+    // Check string origins
+    const stringOrigins = allowedOrigins.filter(o => typeof o === 'string') as string[];
+    if (stringOrigins.includes(origin)) {
+      return callback(null, true);
     }
+    
+    // Check regex patterns
+    const regexOrigins = allowedOrigins.filter(o => o instanceof RegExp) as RegExp[];
+    if (regexOrigins.some(regex => regex.test(origin))) {
+      return callback(null, true);
+    }
+    
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
